@@ -169,8 +169,8 @@
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
 
-        // Input tracking (unified for mouse and touch)
-        let pointer = { x: canvas.width / 2, y: canvas.height / 2 };
+        // Input tracking
+        let pointer = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
         let pointerSpeed = 0;
         let lastPointer = { x: pointer.x, y: pointer.y };
         let isPressed = false;
@@ -178,7 +178,7 @@
         let touchCount = 0;
 
         // Haptic feedback for mobile
-        function hapticFeedback(intensity = 'light') {
+        function hapticFeedback(intensity) {
             if (!isMobile || !navigator.vibrate) return;
             
             const patterns = {
@@ -211,10 +211,10 @@
                 cursor.style.top = (pointer.y - 10) + 'px';
                 
                 if (diarrheaMode) {
-                    cursor.style.transform = `scale(${2 + Math.sin(Date.now() * 0.01) * 0.5}) rotate(${Date.now() * 0.1}deg)`;
+                    cursor.style.transform = 'scale(' + (2 + Math.sin(Date.now() * 0.01) * 0.5) + ') rotate(' + (Date.now() * 0.1) + 'deg)';
                     cursor.classList.add('diarrhea-mode');
                 } else {
-                    cursor.style.transform = `scale(${1 + pointerSpeed * 0.05})`;
+                    cursor.style.transform = 'scale(' + (1 + pointerSpeed * 0.05) + ')';
                     cursor.classList.remove('diarrhea-mode');
                 }
             }
@@ -227,20 +227,20 @@
 
         // Mouse events (desktop)
         if (!isMobile) {
-            document.addEventListener('mousemove', (e) => {
+            document.addEventListener('mousemove', function(e) {
                 updatePointer(e.clientX, e.clientY);
             });
 
-            document.addEventListener('mousedown', () => { 
+            document.addEventListener('mousedown', function() { 
                 isPressed = true; 
                 hapticFeedback('explosion');
             });
             
-            document.addEventListener('mouseup', () => { 
+            document.addEventListener('mouseup', function() { 
                 isPressed = false; 
             });
             
-            document.addEventListener('keydown', (e) => { 
+            document.addEventListener('keydown', function(e) { 
                 if (e.key === 'Shift') {
                     diarrheaMode = true;
                     document.body.style.animation = 'chaosShake 0.05s infinite linear';
@@ -255,7 +255,7 @@
                 }
             });
             
-            document.addEventListener('keyup', (e) => { 
+            document.addEventListener('keyup', function(e) { 
                 if (e.key === 'Shift') {
                     diarrheaMode = false;
                     document.body.style.animation = '';
@@ -264,7 +264,7 @@
         }
 
         // Touch events (mobile)
-        document.addEventListener('touchstart', (e) => {
+        document.addEventListener('touchstart', function(e) {
             e.preventDefault();
             touchCount = e.touches.length;
             
@@ -282,7 +282,7 @@
             }
         });
 
-        document.addEventListener('touchmove', (e) => {
+        document.addEventListener('touchmove', function(e) {
             e.preventDefault();
             touchCount = e.touches.length;
             
@@ -296,7 +296,7 @@
             }
         });
 
-        document.addEventListener('touchend', (e) => {
+        document.addEventListener('touchend', function(e) {
             e.preventDefault();
             touchCount = e.touches.length;
             
@@ -314,41 +314,19 @@
             }
         });
 
-        // Mobile shake to reset
-        if (isMobile && window.DeviceMotionEvent) {
-            let lastShake = 0;
-            window.addEventListener('devicemotion', (e) => {
-                const acceleration = e.accelerationIncludingGravity;
-                const shakeThreshold = 15;
-                const now = Date.now();
-                
-                if (now - lastShake > 1000) { // Prevent multiple rapid resets
-                    const totalAcceleration = Math.abs(acceleration.x) + Math.abs(acceleration.y) + Math.abs(acceleration.z);
-                    if (totalAcceleration > shakeThreshold) {
-                        // Reset everything
-                        particles.length = 0;
-                        ctx.fillStyle = 'rgba(26, 0, 51, 1)';
-                        ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
-                        hapticFeedback('reset');
-                        lastShake = now;
-                    }
-                }
-            });
-        }
-
         // Chaos particle class
         class ChaosParticle {
-            constructor(x, y, type = 'normal') {
+            constructor(x, y, type) {
                 this.x = x;
                 this.y = y;
                 this.startX = x;
                 this.startY = y;
-                this.type = type;
-                this.size = Math.random() * (isMobile ? 10 : 12) + (isMobile ? 4 : 6); // Slightly smaller on mobile
+                this.type = type || 'normal';
+                this.size = Math.random() * (isMobile ? 10 : 12) + (isMobile ? 4 : 6);
                 this.maxSize = this.size;
                 this.hue = Math.random() * 360;
                 this.opacity = 1;
-                this.life = (isMobile ? 40 : 60) + Math.random() * (isMobile ? 80 : 120); // Shorter life on mobile
+                this.life = (isMobile ? 40 : 60) + Math.random() * (isMobile ? 80 : 120);
                 this.maxLife = this.life;
                 this.speed = Math.random() * 4 + 1;
                 this.angle = Math.random() * Math.PI * 2;
@@ -361,97 +339,40 @@
                 this.chaos = Math.random() * 2;
                 this.wobble = Math.random() * 0.1;
                 
-                // Set turd colors for normal mode - exactly like 💩 emoji
+                // Set turd colors for normal mode
                 if (type === 'normal') {
-                    this.hue = 30 + Math.random() * 10; // Consistent brown (30-40)
-                    this.saturation = 50 + Math.random() * 15; // 50-65% saturation
-                    this.lightness = 25 + Math.random() * 10; // 25-35% lightness for emoji brown
+                    this.hue = 30 + Math.random() * 10;
+                    this.saturation = 50 + Math.random() * 15;
+                    this.lightness = 25 + Math.random() * 10;
                     this.sparkle = true;
-                    this.shape = 'emoji'; // Always emoji shape
-                    this.swirls = 2 + Math.random(); // Number of swirls like emoji
+                    this.shape = 'emoji';
+                    this.swirls = 2 + Math.random();
                 }
                 
-                // Diarrhea mode properties - green and explosive with brown chunks
+                // Diarrhea mode properties
                 if (type === 'diarrhea') {
                     this.size *= isMobile ? 2.5 : 3;
                     this.maxSize *= isMobile ? 2.5 : 3;
                     this.speed *= 2;
-                    this.life *= 1.2; // Shorter life for faster clearing
+                    this.life *= 1.2;
                     this.maxLife *= 1.2;
-                    this.hue = Math.random() * 60 + 70; // Green range (70-130)
-                    this.saturation = 70 + Math.random() * 30; // 70-100% saturation for sickly green
-                    this.lightness = 25 + Math.random() * 30; // 25-55% lightness
+                    this.hue = Math.random() * 60 + 70;
+                    this.saturation = 70 + Math.random() * 30;
+                    this.lightness = 25 + Math.random() * 30;
                     this.chaos *= 5;
                     this.sparkle = false;
                     this.explosive = true;
                     this.shape = Math.random() < 0.5 ? 'splat' : 'chunk';
                 }
                 
-                // Brown chunks mixed in diarrhea mode
+                // Brown chunks
                 if (type === 'brownChunk') {
                     this.size *= isMobile ? 1.5 : 2;
                     this.maxSize *= isMobile ? 1.5 : 2;
                     this.speed *= 1.5;
-                    this.life *= 1.2; // Shorter life for faster clearing
+                    this.life *= 1.2;
                     this.maxLife *= 1.2;
-                    this.hue = 30 + Math.random() * 10; // Brown like normal mode
-                    this.saturation = 50 + Math.random() * 15;
-                    this.lightness = 25 + Math.random() * 10;
-                    this.chaos *= 3;
-                    this.sparkle = false;
-                    this.explosive = true;
-                    this.shape = 'chunk';
-                }
-            }
-                this.hue = Math.random() * 360;
-                this.opacity = 1;
-                this.life = 60 + Math.random() * 120;
-                this.maxLife = this.life;
-                this.speed = Math.random() * 4 + 1;
-                this.angle = Math.random() * Math.PI * 2;
-                this.velocity = {
-                    x: Math.cos(this.angle) * this.speed,
-                    y: Math.sin(this.angle) * this.speed
-                };
-                this.rotation = 0;
-                this.rotationSpeed = (Math.random() - 0.5) * 0.3;
-                this.chaos = Math.random() * 2;
-                this.wobble = Math.random() * 0.1;
-                
-                // Set turd colors for normal mode - exactly like 💩 emoji
-                if (type === 'normal') {
-                    this.hue = 30 + Math.random() * 10; // Consistent brown (30-40)
-                    this.saturation = 50 + Math.random() * 15; // 50-65% saturation
-                    this.lightness = 25 + Math.random() * 10; // 25-35% lightness for emoji brown
-                    this.sparkle = true;
-                    this.shape = 'emoji'; // Always emoji shape
-                    this.swirls = 2 + Math.random(); // Number of swirls like emoji
-                }
-                
-                // Diarrhea mode properties - green and explosive with brown chunks
-                if (type === 'diarrhea') {
-                    this.size *= 3;
-                    this.maxSize *= 3;
-                    this.speed *= 2;
-                    this.life *= 1.2; // Shorter life for faster clearing
-                    this.maxLife *= 1.2;
-                    this.hue = Math.random() * 60 + 70; // Green range (70-130)
-                    this.saturation = 70 + Math.random() * 30; // 70-100% saturation for sickly green
-                    this.lightness = 25 + Math.random() * 30; // 25-55% lightness
-                    this.chaos *= 5;
-                    this.sparkle = false;
-                    this.explosive = true;
-                    this.shape = Math.random() < 0.5 ? 'splat' : 'chunk';
-                }
-                
-                // Brown chunks mixed in diarrhea mode
-                if (type === 'brownChunk') {
-                    this.size *= 2;
-                    this.maxSize *= 2;
-                    this.speed *= 1.5;
-                    this.life *= 1.2; // Shorter life for faster clearing
-                    this.maxLife *= 1.2;
-                    this.hue = 30 + Math.random() * 10; // Brown like normal mode
+                    this.hue = 30 + Math.random() * 10;
                     this.saturation = 50 + Math.random() * 15;
                     this.lightness = 25 + Math.random() * 10;
                     this.chaos *= 3;
@@ -468,7 +389,11 @@
                 if (this.type === 'diarrhea') {
                     this.velocity.x += (Math.random() - 0.5) * this.chaos;
                     this.velocity.y += (Math.random() - 0.5) * this.chaos;
-                    this.velocity.y += 0.1; // Gravity for splats
+                    this.velocity.y += 0.1;
+                } else if (this.type === 'brownChunk') {
+                    this.velocity.x += (Math.random() - 0.5) * this.chaos;
+                    this.velocity.y += (Math.random() - 0.5) * this.chaos;
+                    this.velocity.y += 0.05;
                 } else {
                     this.velocity.x += Math.sin(time * this.wobble) * 0.1;
                     this.velocity.y += Math.cos(time * this.wobble) * 0.1;
@@ -478,20 +403,38 @@
                 this.x += this.velocity.x;
                 this.y += this.velocity.y;
                 
-                // Chaotic bouncing
-                if (this.x < 0 || this.x > canvas.width) {
+                // Bouncing
+                if (this.x < 0 || this.x > window.innerWidth) {
                     this.velocity.x *= -0.8;
-                    this.x = Math.max(0, Math.min(canvas.width, this.x));
+                    this.x = Math.max(0, Math.min(window.innerWidth, this.x));
                 }
-                if (this.y < 0 || this.y > canvas.height) {
+                if (this.y < 0 || this.y > window.innerHeight) {
                     this.velocity.y *= -0.8;
-                    this.y = Math.max(0, Math.min(canvas.height, this.y));
+                    this.y = Math.max(0, Math.min(window.innerHeight, this.y));
                 }
                 
-                // Slow down over time
+                // Slow down
                 this.velocity.x *= 0.99;
                 this.velocity.y *= 0.99;
                 
+                // Update life
+                this.life--;
+                const lifeRatio = this.life / this.maxLife;
+                this.opacity = lifeRatio;
+                
+                if (this.type === 'diarrhea' || this.type === 'brownChunk') {
+                    this.size = this.maxSize * (0.8 + lifeRatio * 0.2);
+                    if (this.type === 'diarrhea') {
+                        this.hue = 70 + ((this.hue - 70 + Math.random() * 10 - 5) % 60);
+                    }
+                } else {
+                    this.size = this.maxSize * (0.5 + lifeRatio * 0.5);
+                    this.hue = 30 + ((this.hue - 30 + Math.random() * 2 - 1) % 10);
+                }
+                
+                this.rotation += this.rotationSpeed;
+            }
+
             draw() {
                 if (this.opacity <= 0) return;
                 
@@ -500,14 +443,12 @@
                 ctx.rotate(this.rotation);
                 
                 if (this.type === 'diarrhea') {
-                    // Draw explosive green splats and chunks
+                    // Green splats
                     if (this.shape === 'splat') {
-                        // Explosive irregular splat shape
                         const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.size * (isMobile ? 2.5 : 3));
-                        gradient.addColorStop(0, `hsla(${this.hue}, ${this.saturation}%, ${this.lightness + 10}%, ${this.opacity})`);
-                        gradient.addColorStop(0.4, `hsla(${this.hue}, ${this.saturation}%, ${this.lightness}%, ${this.opacity * 0.8})`);
-                        gradient.addColorStop(0.7, `hsla(${this.hue}, ${this.saturation - 20}%, ${this.lightness - 10}%, ${this.opacity * 0.4})`);
-                        gradient.addColorStop(1, `hsla(${this.hue}, ${this.saturation - 30}%, ${this.lightness - 20}%, 0)`);
+                        gradient.addColorStop(0, 'hsla(' + this.hue + ', ' + this.saturation + '%, ' + (this.lightness + 10) + '%, ' + this.opacity + ')');
+                        gradient.addColorStop(0.4, 'hsla(' + this.hue + ', ' + this.saturation + '%, ' + this.lightness + '%, ' + (this.opacity * 0.8) + ')');
+                        gradient.addColorStop(1, 'hsla(' + this.hue + ', ' + (this.saturation - 30) + '%, ' + (this.lightness - 20) + '%, 0)');
                         
                         ctx.fillStyle = gradient;
                         ctx.beginPath();
@@ -521,46 +462,10 @@
                         }
                         ctx.closePath();
                         ctx.fill();
-                        
-                        // Add explosive particles around splat (fewer on mobile)
-                        for (let i = 0; i < (isMobile ? 3 : 6); i++) {
-                            const angle = Math.random() * Math.PI * 2;
-                            const distance = this.size * (1.5 + Math.random());
-                            const particleX = Math.cos(angle) * distance;
-                            const particleY = Math.sin(angle) * distance;
-                            
-                            ctx.fillStyle = `hsla(${this.hue}, ${this.saturation}%, ${this.lightness}%, ${this.opacity * 0.6})`;
-                            ctx.beginPath();
-                            ctx.arc(particleX, particleY, this.size * 0.2, 0, Math.PI * 2);
-                            ctx.fill();
-                        }
-                        
-                    } else {
-                        // Explosive chunky pieces
-                        ctx.fillStyle = `hsla(${this.hue}, ${this.saturation}%, ${this.lightness}%, ${this.opacity})`;
-                        
-                        // Draw jagged chunk
-                        ctx.beginPath();
-                        for (let i = 0; i < 8; i++) {
-                            const angle = (i / 8) * Math.PI * 2;
-                            const radius = this.size * (0.7 + Math.random() * 0.6);
-                            const x = Math.cos(angle) * radius;
-                            const y = Math.sin(angle) * radius;
-                            if (i === 0) ctx.moveTo(x, y);
-                            else ctx.lineTo(x, y);
-                        }
-                        ctx.closePath();
-                        ctx.fill();
-                        
-                        // Add some explosive texture
-                        ctx.fillStyle = `hsla(${this.hue + 20}, ${this.saturation - 10}%, ${this.lightness + 15}%, ${this.opacity * 0.7})`;
-                        ctx.fillRect(-this.size/3, -this.size/3, this.size/1.5, this.size/2);
                     }
                 } else if (this.type === 'brownChunk') {
-                    // Brown chunks mixed in with diarrhea
-                    ctx.fillStyle = `hsla(${this.hue}, ${this.saturation}%, ${this.lightness}%, ${this.opacity})`;
-                    
-                    // Draw chunky brown piece
+                    // Brown chunks
+                    ctx.fillStyle = 'hsla(' + this.hue + ', ' + this.saturation + '%, ' + this.lightness + '%, ' + this.opacity + ')';
                     ctx.beginPath();
                     for (let i = 0; i < 6; i++) {
                         const angle = (i / 6) * Math.PI * 2;
@@ -572,133 +477,42 @@
                     }
                     ctx.closePath();
                     ctx.fill();
-                    
-                    // Add brown chunk texture
-                    ctx.fillStyle = `hsla(${this.hue}, ${this.saturation + 10}%, ${this.lightness - 8}%, ${this.opacity * 0.8})`;
-                    for (let i = 0; i < 3; i++) {
-                        const spotX = (Math.random() - 0.5) * this.size * 0.8;
-                        const spotY = (Math.random() - 0.5) * this.size * 0.8;
-                        ctx.beginPath();
-                        ctx.arc(spotX, spotY, this.size * 0.1, 0, Math.PI * 2);
-                        ctx.fill();
-                    }
                 } else {
-                    // Normal mode - exactly like 💩 emoji
-                    // Draw the classic poop emoji shape
+                    // Normal emoji turds with sparkles
                     const baseWidth = this.size * 1.5;
                     const baseHeight = this.size * 0.8;
-                    const midWidth = this.size * 1.2;
-                    const midHeight = this.size * 0.7;
-                    const topWidth = this.size * 0.8;
-                    const topHeight = this.size * 0.6;
                     
-                    // Base layer (bottom)
-                    ctx.fillStyle = `hsla(${this.hue}, ${this.saturation}%, ${this.lightness}%, ${this.opacity})`;
+                    // Base layer
+                    ctx.fillStyle = 'hsla(' + this.hue + ', ' + this.saturation + '%, ' + this.lightness + '%, ' + this.opacity + ')';
                     ctx.beginPath();
                     ctx.ellipse(0, this.size * 0.4, baseWidth/2, baseHeight/2, 0, 0, Math.PI * 2);
                     ctx.fill();
                     
-                    // Add base layer outline
-                    ctx.strokeStyle = `hsla(${this.hue}, ${this.saturation + 20}%, ${this.lightness - 10}%, ${this.opacity})`;
-                    ctx.lineWidth = isMobile ? 1 : 1.5;
-                    ctx.stroke();
-                    
                     // Middle layer
-                    ctx.fillStyle = `hsla(${this.hue}, ${this.saturation}%, ${this.lightness + 3}%, ${this.opacity})`;
                     ctx.beginPath();
-                    ctx.ellipse(0, 0, midWidth/2, midHeight/2, 0, 0, Math.PI * 2);
+                    ctx.ellipse(0, 0, (this.size * 1.2)/2, (this.size * 0.7)/2, 0, 0, Math.PI * 2);
                     ctx.fill();
-                    ctx.stroke();
                     
-                    // Top layer (peak)
-                    ctx.fillStyle = `hsla(${this.hue}, ${this.saturation}%, ${this.lightness + 5}%, ${this.opacity})`;
+                    // Top layer
                     ctx.beginPath();
-                    ctx.ellipse(0, -this.size * 0.4, topWidth/2, topHeight/2, 0, 0, Math.PI * 2);
+                    ctx.ellipse(0, -this.size * 0.4, (this.size * 0.8)/2, (this.size * 0.6)/2, 0, 0, Math.PI * 2);
                     ctx.fill();
-                    ctx.stroke();
                     
-                    // Add the characteristic poop swirl on top
-                    ctx.strokeStyle = `hsla(${this.hue}, ${this.saturation + 15}%, ${this.lightness - 8}%, ${this.opacity})`;
-                    ctx.lineWidth = isMobile ? 1.5 : 2;
-                    ctx.beginPath();
-                    for (let t = 0; t < this.swirls * Math.PI; t += 0.1) {
-                        const radius = (this.swirls * Math.PI - t) / (this.swirls * Math.PI) * this.size * 0.3;
-                        const x = Math.cos(t) * radius;
-                        const y = -this.size * 0.4 + Math.sin(t) * radius * 0.3;
-                        if (t === 0) ctx.moveTo(x, y);
-                        else ctx.lineTo(x, y);
-                    }
-                    ctx.stroke();
-                    
-                    // Add delicate twinkling sparkles like the emoji - MAGICAL SPARKLY SHIT!
-                    for (let i = 0; i < (isMobile ? 8 : 12); i++) {
-                        const sparkleX = (Math.random() - 0.5) * this.size * 2.5;
-                        const sparkleY = (Math.random() - 0.5) * this.size * 2;
+                    // Add sparkles
+                    for (let i = 0; i < (isMobile ? 6 : 8); i++) {
+                        const sparkleX = (Math.random() - 0.5) * this.size * 2;
+                        const sparkleY = (Math.random() - 0.5) * this.size * 1.5;
                         const sparkleTime = Date.now() * 0.005 + i * 0.3;
                         const twinkle = Math.sin(sparkleTime) * 0.5 + 0.5;
-                        const sparkleSize = (Math.random() * 0.8 + 0.3) * twinkle * (isMobile ? 0.8 : 1); // Smaller, more delicate
                         
-                        // Delicate sparkle colors
-                        const sparkleHues = [45, 50, 55, 40, 60]; // Subtle golds
-                        const sparkleHue = sparkleHues[i % sparkleHues.length];
-                        
-                        // Only show sparkle when it's bright enough (creates twinkling effect)
                         if (twinkle > 0.3) {
-                            // Soft glow around sparkle
-                            const glowGradient = ctx.createRadialGradient(sparkleX, sparkleY, 0, sparkleX, sparkleY, sparkleSize * (isMobile ? 3 : 4));
-                            glowGradient.addColorStop(0, `hsla(${sparkleHue}, 80%, 85%, ${this.opacity * twinkle * 0.6})`);
-                            glowGradient.addColorStop(0.5, `hsla(${sparkleHue}, 70%, 75%, ${this.opacity * twinkle * 0.3})`);
-                            glowGradient.addColorStop(1, `hsla(${sparkleHue}, 60%, 65%, 0)`);
+                            const sparkleSize = (Math.random() * 0.8 + 0.3) * twinkle;
                             
-                            ctx.fillStyle = glowGradient;
-                            ctx.beginPath();
-                            ctx.arc(sparkleX, sparkleY, sparkleSize * (isMobile ? 3 : 4), 0, Math.PI * 2);
-                            ctx.fill();
-                            
-                            // Delicate 4-pointed star
-                            ctx.fillStyle = `hsla(${sparkleHue}, 90%, 95%, ${this.opacity * twinkle * 0.9})`;
-                            const starSize = sparkleSize * 2.5;
-                            // Vertical line
+                            // Star sparkle
+                            ctx.fillStyle = 'hsla(50, 90%, 95%, ' + (this.opacity * twinkle * 0.9) + ')';
+                            const starSize = sparkleSize * 2;
                             ctx.fillRect(sparkleX - 0.3, sparkleY - starSize, 0.6, starSize * 2);
-                            // Horizontal line  
                             ctx.fillRect(sparkleX - starSize, sparkleY - 0.3, starSize * 2, 0.6);
-                            
-                            // Tiny bright center
-                            ctx.fillStyle = `hsla(${sparkleHue}, 100%, 100%, ${this.opacity * twinkle})`;
-                            ctx.beginPath();
-                            ctx.arc(sparkleX, sparkleY, sparkleSize * 0.4, 0, Math.PI * 2);
-                            ctx.fill();
-                        }
-                    }
-                    
-                    // Add subtle floating twinkles around the turd (fewer on mobile)
-                    for (let i = 0; i < (isMobile ? 4 : 6); i++) {
-                        const floatTime = Date.now() * 0.001 + i * 1.2;
-                        const twinklePhase = Date.now() * 0.008 + i * 0.7;
-                        const floatTwinkle = Math.sin(twinklePhase) * 0.5 + 0.5;
-                        
-                        // Only show when bright enough
-                        if (floatTwinkle > 0.4) {
-                            const floatAngle = floatTime;
-                            const floatRadius = this.size * (1.8 + Math.sin(Date.now() * 0.002 + i) * 0.3);
-                            const floatX = Math.cos(floatAngle) * floatRadius;
-                            const floatY = Math.sin(floatAngle) * floatRadius;
-                            const floatSize = (floatTwinkle * 0.6 + 0.2) * 0.8 * (isMobile ? 0.8 : 1); // Very small and delicate
-                            
-                            // Soft floating sparkle with glow
-                            const floatGradient = ctx.createRadialGradient(floatX, floatY, 0, floatX, floatY, floatSize * (isMobile ? 2.5 : 3));
-                            floatGradient.addColorStop(0, `hsla(${50 + i * 3}, 85%, 90%, ${this.opacity * floatTwinkle * 0.5})`);
-                            floatGradient.addColorStop(1, `hsla(${50 + i * 3}, 70%, 80%, 0)`);
-                            
-                            ctx.fillStyle = floatGradient;
-                            ctx.beginPath();
-                            ctx.arc(floatX, floatY, floatSize * (isMobile ? 2.5 : 3), 0, Math.PI * 2);
-                            ctx.fill();
-                            
-                            // Tiny delicate star
-                            ctx.fillStyle = `hsla(${50 + i * 3}, 95%, 100%, ${this.opacity * floatTwinkle * 0.8})`;
-                            ctx.fillRect(floatX - floatSize * 1.5, floatY - 0.2, floatSize * 3, 0.4);
-                            ctx.fillRect(floatX - 0.2, floatY - floatSize * 1.5, 0.4, floatSize * 3);
                         }
                     }
                 }
@@ -714,13 +528,13 @@
         // Particle system
         const particles = [];
 
-        function createChaosExplosion(x, y, intensity = 1) {
-            const numParticles = Math.floor((20 + Math.random() * 30) * intensity * (isMobile ? 0.7 : 1));
+        function createChaosExplosion(x, y, intensity) {
+            const numParticles = Math.floor((20 + Math.random() * 30) * (intensity || 1) * (isMobile ? 0.7 : 1));
             const type = diarrheaMode ? (Math.random() < 0.7 ? 'diarrhea' : 'brownChunk') : 'normal';
             
             for (let i = 0; i < numParticles; i++) {
                 const angle = (i / numParticles) * Math.PI * 2;
-                const distance = Math.random() * 50 * intensity;
+                const distance = Math.random() * 50 * (intensity || 1);
                 const particleX = x + Math.cos(angle) * distance;
                 const particleY = y + Math.sin(angle) * distance;
                 
@@ -737,7 +551,7 @@
             }
         }
 
-        // Background stars (fewer on mobile)
+        // Background stars
         const stars = [];
         const numStars = isMobile ? 50 : 100;
         
@@ -754,22 +568,20 @@
 
         function drawStars() {
             const time = Date.now() * 0.001;
-            stars.forEach(star => {
+            stars.forEach(function(star) {
                 let twinkle = Math.sin(time * star.twinkleSpeed) * 0.4 + 0.6;
                 let alpha = star.opacity * twinkle;
                 
                 if (diarrheaMode) {
-                    // Stars go crazy in diarrhea mode
                     alpha *= Math.random();
                     star.x += (Math.random() - 0.5) * star.chaos * (isMobile ? 0.5 : 1);
                     star.y += (Math.random() - 0.5) * star.chaos * (isMobile ? 0.5 : 1);
                     
-                    // Keep stars on screen
                     star.x = Math.max(0, Math.min(window.innerWidth, star.x));
                     star.y = Math.max(0, Math.min(window.innerHeight, star.y));
                 }
                 
-                ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+                ctx.fillStyle = 'rgba(255, 255, 255, ' + alpha + ')';
                 ctx.beginPath();
                 ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
                 ctx.fill();
@@ -778,19 +590,15 @@
 
         // Animation loop
         function animate() {
-            // Create trailing effect - faster fade for quicker clearing
             const fadeAmount = diarrheaMode ? (isMobile ? 0.15 : 0.12) : (isMobile ? 0.08 : 0.05);
-            ctx.fillStyle = `rgba(26, 0, 51, ${fadeAmount})`;
+            ctx.fillStyle = 'rgba(26, 0, 51, ' + fadeAmount + ')';
             ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
             
-            // Draw chaotic stars
             drawStars();
             
-            // Create trail chaos
             if (pointerSpeed > 0.5) {
                 const intensity = Math.min(pointerSpeed / 10, 2);
                 if (diarrheaMode) {
-                    // More chaos in diarrhea mode (but fewer on mobile)
                     for (let i = 0; i < (isMobile ? 2 : 3); i++) {
                         createTrailChaos(
                             pointer.x + (Math.random() - 0.5) * 50,
@@ -802,7 +610,6 @@
                 }
             }
             
-            // Click/tap explosions
             if (isPressed && Math.random() < (isMobile ? 0.6 : 0.8)) {
                 const intensity = diarrheaMode ? (isMobile ? 2 : 3) : 1;
                 createChaosExplosion(
@@ -812,7 +619,6 @@
                 );
             }
             
-            // Random chaos bursts in diarrhea mode (fewer on mobile)
             if (diarrheaMode && Math.random() < (isMobile ? 0.05 : 0.1)) {
                 createChaosExplosion(
                     Math.random() * window.innerWidth,
@@ -821,7 +627,6 @@
                 );
             }
             
-            // Update and draw particles
             for (let i = particles.length - 1; i >= 0; i--) {
                 const particle = particles[i];
                 particle.update();
@@ -832,426 +637,17 @@
                 }
             }
             
-            // Draw pointer chaos field
-            if (pointerSpeed > 2 || diarrheaMode) {
-                const intensity = diarrheaMode ? 2 : 1;
-                const gradient = ctx.createRadialGradient(
-                    pointer.x, pointer.y, 0,
-                    pointer.x, pointer.y, (30 + pointerSpeed) * intensity
-                );
-                
-                if (diarrheaMode) {
-                    gradient.addColorStop(0, 'rgba(139, 69, 19, 0.3)'); // Brown
-                    gradient.addColorStop(1, 'rgba(139, 69, 19, 0)');
-                } else {
-                    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
-                    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-                }
-                
-                ctx.fillStyle = gradient;
-                ctx.beginPath();
-                ctx.arc(pointer.x, pointer.y, (30 + pointerSpeed) * intensity, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            
             requestAnimationFrame(animate);
         }
 
         // Handle window resize
-        window.addEventListener('resize', () => {
+        window.addEventListener('resize', function() {
             resizeCanvas();
-            // Recreate stars
             stars.length = 0;
             for (let i = 0; i < numStars; i++) {
                 stars.push({
                     x: Math.random() * window.innerWidth,
                     y: Math.random() * window.innerHeight,
-                    size: Math.random() * 1.5 + 0.5,
-                    opacity: Math.random() * 0.6 + 0.2,
-                    twinkleSpeed: Math.random() * 0.02 + 0.005,
-                    chaos: Math.random() * 2
-                });
-            }
-        });
-
-        // Start the beautiful chaos
-        animate();
-    </script>
-</body>
-</html>
-
-            draw() {
-                if (this.opacity <= 0) return;
-                
-                ctx.save();
-                ctx.translate(this.x, this.y);
-                ctx.rotate(this.rotation);
-                
-                if (this.type === 'diarrhea') {
-                    // Draw explosive green splats and chunks
-                    if (this.shape === 'splat') {
-                        // Explosive irregular splat shape
-                        const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.size * 3);
-                        gradient.addColorStop(0, `hsla(${this.hue}, ${this.saturation}%, ${this.lightness + 10}%, ${this.opacity})`);
-                        gradient.addColorStop(0.4, `hsla(${this.hue}, ${this.saturation}%, ${this.lightness}%, ${this.opacity * 0.8})`);
-                        gradient.addColorStop(0.7, `hsla(${this.hue}, ${this.saturation - 20}%, ${this.lightness - 10}%, ${this.opacity * 0.4})`);
-                        gradient.addColorStop(1, `hsla(${this.hue}, ${this.saturation - 30}%, ${this.lightness - 20}%, 0)`);
-                        
-                        ctx.fillStyle = gradient;
-                        ctx.beginPath();
-                        for (let i = 0; i < 12; i++) {
-                            const angle = (i / 12) * Math.PI * 2;
-                            const radius = this.size * (0.5 + Math.random() * 1.2);
-                            const x = Math.cos(angle) * radius;
-                            const y = Math.sin(angle) * radius;
-                            if (i === 0) ctx.moveTo(x, y);
-                            else ctx.lineTo(x, y);
-                        }
-                        ctx.closePath();
-                        ctx.fill();
-                        
-                        // Add explosive particles around splat
-                        for (let i = 0; i < 6; i++) {
-                            const angle = Math.random() * Math.PI * 2;
-                            const distance = this.size * (1.5 + Math.random());
-                            const particleX = Math.cos(angle) * distance;
-                            const particleY = Math.sin(angle) * distance;
-                            
-                            ctx.fillStyle = `hsla(${this.hue}, ${this.saturation}%, ${this.lightness}%, ${this.opacity * 0.6})`;
-                            ctx.beginPath();
-                            ctx.arc(particleX, particleY, this.size * 0.2, 0, Math.PI * 2);
-                            ctx.fill();
-                        }
-                        
-                    } else {
-                        // Explosive chunky pieces
-                        ctx.fillStyle = `hsla(${this.hue}, ${this.saturation}%, ${this.lightness}%, ${this.opacity})`;
-                        
-                        // Draw jagged chunk
-                        ctx.beginPath();
-                        for (let i = 0; i < 8; i++) {
-                            const angle = (i / 8) * Math.PI * 2;
-                            const radius = this.size * (0.7 + Math.random() * 0.6);
-                            const x = Math.cos(angle) * radius;
-                            const y = Math.sin(angle) * radius;
-                            if (i === 0) ctx.moveTo(x, y);
-                            else ctx.lineTo(x, y);
-                        }
-                        ctx.closePath();
-                        ctx.fill();
-                        
-                        // Add some explosive texture
-                        ctx.fillStyle = `hsla(${this.hue + 20}, ${this.saturation - 10}%, ${this.lightness + 15}%, ${this.opacity * 0.7})`;
-                        ctx.fillRect(-this.size/3, -this.size/3, this.size/1.5, this.size/2);
-                    }
-                } else if (this.type === 'brownChunk') {
-                    // Brown chunks mixed in with diarrhea
-                    ctx.fillStyle = `hsla(${this.hue}, ${this.saturation}%, ${this.lightness}%, ${this.opacity})`;
-                    
-                    // Draw chunky brown piece
-                    ctx.beginPath();
-                    for (let i = 0; i < 6; i++) {
-                        const angle = (i / 6) * Math.PI * 2;
-                        const radius = this.size * (0.6 + Math.random() * 0.5);
-                        const x = Math.cos(angle) * radius;
-                        const y = Math.sin(angle) * radius;
-                        if (i === 0) ctx.moveTo(x, y);
-                        else ctx.lineTo(x, y);
-                    }
-                    ctx.closePath();
-                    ctx.fill();
-                    
-                    // Add brown chunk texture
-                    ctx.fillStyle = `hsla(${this.hue}, ${this.saturation + 10}%, ${this.lightness - 8}%, ${this.opacity * 0.8})`;
-                    for (let i = 0; i < 3; i++) {
-                        const spotX = (Math.random() - 0.5) * this.size * 0.8;
-                        const spotY = (Math.random() - 0.5) * this.size * 0.8;
-                        ctx.beginPath();
-                        ctx.arc(spotX, spotY, this.size * 0.1, 0, Math.PI * 2);
-                        ctx.fill();
-                    }
-                } else {
-                    // Normal mode - exactly like 💩 emoji
-                    // Draw the classic poop emoji shape
-                    const baseWidth = this.size * 1.5;
-                    const baseHeight = this.size * 0.8;
-                    const midWidth = this.size * 1.2;
-                    const midHeight = this.size * 0.7;
-                    const topWidth = this.size * 0.8;
-                    const topHeight = this.size * 0.6;
-                    
-                    // Base layer (bottom)
-                    ctx.fillStyle = `hsla(${this.hue}, ${this.saturation}%, ${this.lightness}%, ${this.opacity})`;
-                    ctx.beginPath();
-                    ctx.ellipse(0, this.size * 0.4, baseWidth/2, baseHeight/2, 0, 0, Math.PI * 2);
-                    ctx.fill();
-                    
-                    // Add base layer outline
-                    ctx.strokeStyle = `hsla(${this.hue}, ${this.saturation + 20}%, ${this.lightness - 10}%, ${this.opacity})`;
-                    ctx.lineWidth = 1.5;
-                    ctx.stroke();
-                    
-                    // Middle layer
-                    ctx.fillStyle = `hsla(${this.hue}, ${this.saturation}%, ${this.lightness + 3}%, ${this.opacity})`;
-                    ctx.beginPath();
-                    ctx.ellipse(0, 0, midWidth/2, midHeight/2, 0, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.stroke();
-                    
-                    // Top layer (peak)
-                    ctx.fillStyle = `hsla(${this.hue}, ${this.saturation}%, ${this.lightness + 5}%, ${this.opacity})`;
-                    ctx.beginPath();
-                    ctx.ellipse(0, -this.size * 0.4, topWidth/2, topHeight/2, 0, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.stroke();
-                    
-                    // Add the characteristic poop swirl on top
-                    ctx.strokeStyle = `hsla(${this.hue}, ${this.saturation + 15}%, ${this.lightness - 8}%, ${this.opacity})`;
-                    ctx.lineWidth = 2;
-                    ctx.beginPath();
-                    for (let t = 0; t < this.swirls * Math.PI; t += 0.1) {
-                        const radius = (this.swirls * Math.PI - t) / (this.swirls * Math.PI) * this.size * 0.3;
-                        const x = Math.cos(t) * radius;
-                        const y = -this.size * 0.4 + Math.sin(t) * radius * 0.3;
-                        if (t === 0) ctx.moveTo(x, y);
-                        else ctx.lineTo(x, y);
-                    }
-                    ctx.stroke();
-                    
-                    // Add delicate twinkling sparkles like the emoji - MAGICAL SPARKLY SHIT!
-                    for (let i = 0; i < 12; i++) {
-                        const sparkleX = (Math.random() - 0.5) * this.size * 2.5;
-                        const sparkleY = (Math.random() - 0.5) * this.size * 2;
-                        const sparkleTime = Date.now() * 0.005 + i * 0.3;
-                        const twinkle = Math.sin(sparkleTime) * 0.5 + 0.5;
-                        const sparkleSize = (Math.random() * 0.8 + 0.3) * twinkle; // Smaller, more delicate
-                        
-                        // Delicate sparkle colors
-                        const sparkleHues = [45, 50, 55, 40, 60]; // Subtle golds
-                        const sparkleHue = sparkleHues[i % sparkleHues.length];
-                        
-                        // Only show sparkle when it's bright enough (creates twinkling effect)
-                        if (twinkle > 0.3) {
-                            // Soft glow around sparkle
-                            const glowGradient = ctx.createRadialGradient(sparkleX, sparkleY, 0, sparkleX, sparkleY, sparkleSize * 4);
-                            glowGradient.addColorStop(0, `hsla(${sparkleHue}, 80%, 85%, ${this.opacity * twinkle * 0.6})`);
-                            glowGradient.addColorStop(0.5, `hsla(${sparkleHue}, 70%, 75%, ${this.opacity * twinkle * 0.3})`);
-                            glowGradient.addColorStop(1, `hsla(${sparkleHue}, 60%, 65%, 0)`);
-                            
-                            ctx.fillStyle = glowGradient;
-                            ctx.beginPath();
-                            ctx.arc(sparkleX, sparkleY, sparkleSize * 4, 0, Math.PI * 2);
-                            ctx.fill();
-                            
-                            // Delicate 4-pointed star
-                            ctx.fillStyle = `hsla(${sparkleHue}, 90%, 95%, ${this.opacity * twinkle * 0.9})`;
-                            const starSize = sparkleSize * 2.5;
-                            // Vertical line
-                            ctx.fillRect(sparkleX - 0.3, sparkleY - starSize, 0.6, starSize * 2);
-                            // Horizontal line  
-                            ctx.fillRect(sparkleX - starSize, sparkleY - 0.3, starSize * 2, 0.6);
-                            
-                            // Tiny bright center
-                            ctx.fillStyle = `hsla(${sparkleHue}, 100%, 100%, ${this.opacity * twinkle})`;
-                            ctx.beginPath();
-                            ctx.arc(sparkleX, sparkleY, sparkleSize * 0.4, 0, Math.PI * 2);
-                            ctx.fill();
-                        }
-                    }
-                    
-                    // Add subtle floating twinkles around the turd
-                    for (let i = 0; i < 6; i++) {
-                        const floatTime = Date.now() * 0.001 + i * 1.2;
-                        const twinklePhase = Date.now() * 0.008 + i * 0.7;
-                        const floatTwinkle = Math.sin(twinklePhase) * 0.5 + 0.5;
-                        
-                        // Only show when bright enough
-                        if (floatTwinkle > 0.4) {
-                            const floatAngle = floatTime;
-                            const floatRadius = this.size * (1.8 + Math.sin(Date.now() * 0.002 + i) * 0.3);
-                            const floatX = Math.cos(floatAngle) * floatRadius;
-                            const floatY = Math.sin(floatAngle) * floatRadius;
-                            const floatSize = (floatTwinkle * 0.6 + 0.2) * 0.8; // Very small and delicate
-                            
-                            // Soft floating sparkle with glow
-                            const floatGradient = ctx.createRadialGradient(floatX, floatY, 0, floatX, floatY, floatSize * 3);
-                            floatGradient.addColorStop(0, `hsla(${50 + i * 3}, 85%, 90%, ${this.opacity * floatTwinkle * 0.5})`);
-                            floatGradient.addColorStop(1, `hsla(${50 + i * 3}, 70%, 80%, 0)`);
-                            
-                            ctx.fillStyle = floatGradient;
-                            ctx.beginPath();
-                            ctx.arc(floatX, floatY, floatSize * 3, 0, Math.PI * 2);
-                            ctx.fill();
-                            
-                            // Tiny delicate star
-                            ctx.fillStyle = `hsla(${50 + i * 3}, 95%, 100%, ${this.opacity * floatTwinkle * 0.8})`;
-                            ctx.fillRect(floatX - floatSize * 1.5, floatY - 0.2, floatSize * 3, 0.4);
-                            ctx.fillRect(floatX - 0.2, floatY - floatSize * 1.5, 0.4, floatSize * 3);
-                        }
-                    }
-                }
-                
-                ctx.restore();
-            }
-
-            isDead() {
-                return this.life <= 0 || this.opacity <= 0.01;
-            }
-        }
-
-        // Particle system
-        const particles = [];
-
-        function createChaosExplosion(x, y, intensity = 1) {
-            const numParticles = Math.floor((20 + Math.random() * 30) * intensity);
-            const type = diarrheaMode ? 'diarrhea' : 'normal';
-            
-            for (let i = 0; i < numParticles; i++) {
-                const angle = (i / numParticles) * Math.PI * 2 + Math.random() * 0.5;
-                const distance = Math.random() * 50 * intensity;
-                const particleX = x + Math.cos(angle) * distance;
-                const particleY = y + Math.sin(angle) * distance;
-                
-                particles.push(new ChaosParticle(particleX, particleY, type));
-            }
-        }
-
-        function createTrailChaos(x, y) {
-            if (Math.random() < 0.7) {
-                const type = diarrheaMode ? 'diarrhea' : 'normal';
-                const jitterX = x + (Math.random() - 0.5) * 30;
-                const jitterY = y + (Math.random() - 0.5) * 30;
-                particles.push(new ChaosParticle(jitterX, jitterY, type));
-            }
-        }
-
-        // Background stars
-        const stars = [];
-        for (let i = 0; i < 100; i++) {
-            stars.push({
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height,
-                size: Math.random() * 1.5 + 0.5,
-                opacity: Math.random() * 0.6 + 0.2,
-                twinkleSpeed: Math.random() * 0.02 + 0.005,
-                chaos: Math.random() * 2
-            });
-        }
-
-        function drawStars() {
-            const time = Date.now() * 0.001;
-            stars.forEach(star => {
-                let twinkle = Math.sin(time * star.twinkleSpeed) * 0.4 + 0.6;
-                let alpha = star.opacity * twinkle;
-                
-                if (diarrheaMode) {
-                    // Stars go crazy in diarrhea mode
-                    alpha *= Math.random();
-                    star.x += (Math.random() - 0.5) * star.chaos;
-                    star.y += (Math.random() - 0.5) * star.chaos;
-                    
-                    // Keep stars on screen
-                    star.x = Math.max(0, Math.min(canvas.width, star.x));
-                    star.y = Math.max(0, Math.min(canvas.height, star.y));
-                }
-                
-                ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
-                ctx.beginPath();
-                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
-                ctx.fill();
-            });
-        }
-
-        // Animation loop
-        function animate() {
-            // Fade effect
-            const fadeAmount = diarrheaMode ? 0.02 : 0.05;
-            ctx.fillStyle = `rgba(26, 0, 51, ${fadeAmount})`;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // Draw chaotic stars
-            drawStars();
-            
-            // Create trail chaos
-            if (mouseSpeed > 0.5) {
-                const intensity = Math.min(mouseSpeed / 10, 2);
-                if (diarrheaMode) {
-                    // More chaos in diarrhea mode
-                    for (let i = 0; i < 3; i++) {
-                        createTrailChaos(
-                            mouse.x + (Math.random() - 0.5) * 50,
-                            mouse.y + (Math.random() - 0.5) * 50
-                        );
-                    }
-                } else {
-                    createTrailChaos(mouse.x, mouse.y);
-                }
-            }
-            
-            // Click explosions
-            if (isClicking && Math.random() < 0.8) {
-                const intensity = diarrheaMode ? 3 : 1;
-                createChaosExplosion(
-                    mouse.x + (Math.random() - 0.5) * 30,
-                    mouse.y + (Math.random() - 0.5) * 30,
-                    intensity
-                );
-            }
-            
-            // Random chaos bursts in diarrhea mode
-            if (diarrheaMode && Math.random() < 0.1) {
-                createChaosExplosion(
-                    Math.random() * canvas.width,
-                    Math.random() * canvas.height,
-                    Math.random() * 2 + 1
-                );
-            }
-            
-            // Update and draw particles
-            for (let i = particles.length - 1; i >= 0; i--) {
-                const particle = particles[i];
-                particle.update();
-                particle.draw();
-                
-                if (particle.isDead()) {
-                    particles.splice(i, 1);
-                }
-            }
-            
-            // Draw mouse chaos field
-            if (mouseSpeed > 2 || diarrheaMode) {
-                const intensity = diarrheaMode ? 2 : 1;
-                const gradient = ctx.createRadialGradient(
-                    mouse.x, mouse.y, 0,
-                    mouse.x, mouse.y, (30 + mouseSpeed) * intensity
-                );
-                
-                if (diarrheaMode) {
-                    gradient.addColorStop(0, 'rgba(139, 69, 19, 0.3)'); // Brown
-                    gradient.addColorStop(1, 'rgba(139, 69, 19, 0)');
-                } else {
-                    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
-                    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-                }
-                
-                ctx.fillStyle = gradient;
-                ctx.beginPath();
-                ctx.arc(mouse.x, mouse.y, (30 + mouseSpeed) * intensity, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            
-            requestAnimationFrame(animate);
-        }
-
-        // Handle window resize
-        window.addEventListener('resize', () => {
-            resizeCanvas();
-            // Recreate stars
-            stars.length = 0;
-            for (let i = 0; i < 100; i++) {
-                stars.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
                     size: Math.random() * 1.5 + 0.5,
                     opacity: Math.random() * 0.6 + 0.2,
                     twinkleSpeed: Math.random() * 0.02 + 0.005,
